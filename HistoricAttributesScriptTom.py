@@ -12,10 +12,12 @@ from dateutil.relativedelta import relativedelta
 
 def RedshiftInsert (attribute_date):
     redshift = psycopg2.connect(database = "*", user = "*"
-                           ,password = "*"
-                           ,host = "*"
-                           , port = "*")
+                                ,password = "*"
+                                ,host = "*"
+                                , port = "*")
     cur = redshift.cursor()
+    
+    cur.execute("TRUNCATE TABLE di_staging.di_wrk_user_attributes_old")
     
     sql_table_insert = """
     INSERT INTO di_staging.di_wrk_user_attributes_old
@@ -65,9 +67,9 @@ def RedshiftInsert (attribute_date):
     WHERE is_gross = 1
     AND a.di_domain_id=1
     AND domain_network Not In ('QCO','RTV','VISA','COS','Seopa')
-    AND purchase_datetime >= DATEADD(year,-1,{attribute_insert_date}) 
-    and purchase_datetime < {attribute_insert_date}
-    and registration_datetime <= {attribute_insert_date}
+    AND purchase_datetime >= DATEADD(year,-1,'{attribute_insert_date}') 
+    and purchase_datetime < '{attribute_insert_date}'
+    and registration_datetime <= '{attribute_insert_date}'
     
     GROUP BY 1,2,3,8; 
     
@@ -107,8 +109,8 @@ def RedshiftInsert (attribute_date):
     di_dim_user
     where di_domain_id=1
     AND is_cobrand=0
-    and domain_user_id not in (select distinct domain_user_id from di_staging.di_wrk_user_attributes);
-    and registration_datetime <= {attribute_insert_date}
+    and domain_user_id not in (select distinct domain_user_id from di_staging.di_wrk_user_attributes)
+    and registration_datetime <= '{attribute_insert_date}'
     """.format(attribute_insert_date = attribute_date.strftime("%Y-%m-%d"))
 
     cur.execute(sql_table_insert)
@@ -174,7 +176,7 @@ def RedshiftInsert (attribute_date):
     UPDATE di_dim_user_attributes_log
     set valid_to_date = neu.valid_to_date_new
     from (
-    select {attribute_valid_date} as valid_to_date_new,
+    select TO_DATE('{attribute_valid_date}','YYYY-MM-DD') as valid_to_date_new,
     log.domain_user_id, log.valid_from_date
     from di_warehouse.di_dim_user_attributes_log log 
     join di_staging.di_wrk_user_attributes_old  wrk on log.domain_user_id = wrk.domain_user_id
@@ -189,7 +191,7 @@ def RedshiftInsert (attribute_date):
     
     INSERT INTO di_dim_user_attributes_log
     select domain_user_id, 'user_activity_classification_id' as user_attribute  
-    ,wrk.user_activity_classification_id as attribute_value,{attribute_valid_date} as valid_from, null as valid_to 
+    ,wrk.user_activity_classification_id as attribute_value,'{attribute_valid_date}' as valid_from, null as valid_to 
     from di_staging.di_wrk_user_attributes_old wrk
     where not exists (
     select * from di_warehouse.di_dim_user_attributes_log log 
@@ -199,7 +201,7 @@ def RedshiftInsert (attribute_date):
     UPDATE di_dim_user_attributes_log
     set valid_to_date = neu.valid_to_date_new
     from (
-    select {attribute_valid_date} as valid_to_date_new,
+    select TO_DATE('{attribute_valid_date}','YYYY-MM-DD') as valid_to_date_new,
     log.domain_user_id, log.valid_from_date
     from di_warehouse.di_dim_user_attributes_log log 
     join di_staging.di_wrk_user_attributes_old  wrk on log.domain_user_id = wrk.domain_user_id
@@ -214,7 +216,7 @@ def RedshiftInsert (attribute_date):
     
     INSERT INTO di_dim_user_attributes_log
     select domain_user_id, 'user_cashback_band_id' as user_attribute  
-    ,wrk.user_cashback_band_id as attribute_value,{attribute_valid_date} as valid_from, null as valid_to 
+    ,wrk.user_cashback_band_id as attribute_value,'{attribute_valid_date}' as valid_from, null as valid_to 
     from di_staging.di_wrk_user_attributes_old wrk
     where not exists (
     select * from di_warehouse.di_dim_user_attributes_log log 
