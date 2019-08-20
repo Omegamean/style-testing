@@ -1,0 +1,7 @@
+"""
+Standard practice is to include a requirements file in the repo as below, so someone can set up a virtual env,
+`run pip install -r requirements.txt` and have everything installed and ready
+"""
+
+psycopg2==2.8.3
+python-dateutil==2.8.0

@@ -1,0 +1,4 @@
+# So that we don't commit the full virtual environment
+/env
+# This is a pycharm thing.
+.idea
